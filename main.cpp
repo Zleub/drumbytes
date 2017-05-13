@@ -1,4 +1,4 @@
-//           `--::-.`
+ //           `--::-.`
 //       ./shddddddddhs+.
 //     :yddddddddddddddddy:
 //   `sdddddddddddddddddddds`
@@ -6,101 +6,136 @@
 //  sdddddddddddddddddddddddds   @Last modified by: adebray
 //  sdddddddddddddddddddddddds
 //  :ddddddddddhyyddddddddddd:   @Created: 2017-05-11T19:25:36+02:00
-//   odddddddd/`:-`sdddddddds    @Modified: 2017-05-11T22:15:14+02:00
+//   odddddddd/`:-`sdddddddds    @Modified: 2017-05-13T04:53:57+02:00
 //    +ddddddh`+dh +dddddddo
 //     -sdddddh///sdddddds-
 //       .+ydddddddddhs/.
 //           .-::::-`
 
+#include <iostream>
+#include <random>
+#include <array>
+
 #include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
+#include <SFML/System.hpp>
 
-#include <stk/SineWave.h>
-#include <stk/RtAudio.h>
+#define WIDTH (800 * 2)
+#define HEIGHT (600 * 2)
 
+extern "C" {
+	#include <kiss_fft.h>
+};
 
-#define WIDTH 512
-#define HEIGHT 300
+std::default_random_engine generator;
+std::uniform_int_distribution<int> width_distribution(0, WIDTH - 1);
+std::uniform_int_distribution<int> height_distribution(0, HEIGHT - 1);
+std::uniform_int_distribution<int> lifetime_distribution(0, 200);
+std::uniform_real_distribution<double> double_distribution(0.0,0.5);
 
-int tick( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
-		 double streamTime, RtAudioStreamStatus status, void *dataPointer ) {
-	 (void)inputBuffer;
-	 (void)streamTime;
-	 (void)status;
-	 (void)outputBuffer;
-	 (void)dataPointer;
+std::vector<sf::Color> colors = {
+	sf::Color::White,
+	sf::Color::Red,
+	sf::Color::Green,
+	sf::Color::Blue,
+	sf::Color::Yellow,
+	sf::Color::Magenta,
+	sf::Color::Cyan
+};
+std::uniform_int_distribution<int> color_distribution(1, colors.size());
 
-	 stk::StkFloat *samples = (stk::StkFloat *) inputBuffer;
-	 std::vector<sf::RectangleShape*> v = *reinterpret_cast<std::vector<sf::RectangleShape*>*>(dataPointer);
-	 for ( unsigned int i=0; i<nBufferFrames; i++ ) {
-		 v[i]->setPosition(i, HEIGHT - HEIGHT * (samples[i]) - 1);
-		 v[i]->setSize(sf::Vector2f(1, HEIGHT * (samples[i])));
-	 }
-
-	 return 0;
-}
+typedef struct s_particule t_particule;
+struct s_particule {
+	sf::RectangleShape rect;
+	double life;
+};
 
 int main(void) {
 
-	RtAudio dac;
+	sf::Image image;
+	image.create(WIDTH, HEIGHT, sf::Color::Black);
 
-	std::cout << "---- ---- ---- ----" << std::endl;
-	std::cout << dac.getDeviceCount() << " input devices." << std::endl;
+	sf::Texture texture;
+	texture.create(WIDTH, HEIGHT);
+	texture.update(image);
 
-	for (size_t i = 0; i < dac.getDeviceCount(); i++) {
-		RtAudio::DeviceInfo di = dac.getDeviceInfo(i);
-		std::cout << "---- ---- ---- ----" << std::endl;
-		std::cout << "probed: " << di.probed << std::endl;
-		std::cout << "name: " << di.name << std::endl;
-		std::cout << "outputChannels: " << di.outputChannels << std::endl;
-		std::cout << "inputChannels: " << di.inputChannels << std::endl;
-		std::cout << "duplexChannels: " << di.duplexChannels << std::endl;
-		std::cout << "isDefaultOutput: " << di.isDefaultOutput << std::endl;
-		std::cout << "isDefaultInput: " << di.isDefaultInput << std::endl;
-		std::cout << "preferredSampleRate: " << di.preferredSampleRate << std::endl;
-	}
-
-	std::cout << "---- ---- ---- ----" << std::endl;
-	std::cout << "DefaultInputDevice: " << dac.getDeviceInfo(dac.getDefaultInputDevice()).name << std::endl;
-	std::cout << "---- ---- ---- ----" << std::endl;
-
-
-	std::vector<sf::RectangleShape *> v;
-	for (size_t i = 0; i < WIDTH; i++) {
-		sf::RectangleShape *r = new sf::RectangleShape();
-		r->setSize(sf::Vector2f(1, HEIGHT));
-		r->setPosition(i, WIDTH);
-
-		v.push_back( r );
-	}
-
-	stk::SineWave sine;
-	RtAudio::StreamParameters parameters;
-	parameters.deviceId = dac.getDefaultInputDevice();
-	parameters.nChannels = 2;
-	RtAudioFormat format = ( sizeof(stk::StkFloat) == 8 ) ? RTAUDIO_FLOAT64 : RTAUDIO_FLOAT32;
-	unsigned int bufferFrames = stk::RT_BUFFER_SIZE;
-	dac.openStream( NULL, &parameters, format, 48000, &bufferFrames, &tick, (void *)&v );
-	dac.startStream();
+	sf::Sprite sprite(texture);
 
 	sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "SFML window");
 
-    while (window.isOpen())
-    {
-        sf::Event event;
-        while (window.pollEvent(event))
-        {
-            if (event.type == sf::Event::Closed)
-                window.close();
-        }
+	sf::Clock clock;
+	float lastTime = 0;
 
-        window.clear();
-		std::for_each( v.begin(), v.end(), [&](sf::RectangleShape *r){
-			window.draw(*r);
-		});
+	kiss_fft_cfg cfg = kiss_fft_alloc( 512 ,0 ,0,0 );
+	(void)cfg;
 
-        window.display();
-    }
+	t_particule * particules = (t_particule *)malloc(sizeof(t_particule) * WIDTH * HEIGHT );
+	(void)particules;
 
-    return EXIT_SUCCESS;
+	for (size_t i = 0; i < WIDTH * HEIGHT; i++) {
+		particules[i].life = 0;
+		sf::RectangleShape * r = &(particules[i].rect);
+		sf::Vector2f s(10, 10);
+		r->setSize( s );
+		r->setPosition(i % WIDTH, i / WIDTH);
+	}
+
+	std::cout << WIDTH << " x " << HEIGHT << " = " << WIDTH * HEIGHT << std::endl;
+
+	while (window.isOpen())
+	{
+		sf::Event event;
+
+		float currentTime = clock.restart().asSeconds();
+		float fps = 1.f / (currentTime - lastTime);
+		lastTime = currentTime;
+
+		if (window.pollEvent(event)) {
+			if (event.type == sf::Event::Closed)
+				window.close();
+			if (event.type == sf::Event::KeyPressed)
+				std::cout << "fps: " << fps << std::endl;
+			if ((event.type == sf::Event::KeyPressed) && (event.key.code == sf::Keyboard::Num1)) {
+				double intensity = double_distribution(generator);
+				size_t quantity = round(intensity * (WIDTH * HEIGHT) / 100);
+				std::cout << "bass drum" << std::endl;
+				std::cout << intensity << std::endl;
+				std::cout << quantity << std::endl;
+
+				for (size_t i = 0; i < quantity; i++) {
+					int w = width_distribution(generator);
+					int h = height_distribution(generator);
+					int life = lifetime_distribution(generator);
+					particules[w + h * WIDTH].life = life;
+				}
+ 			}
+			if ((event.type == sf::Event::KeyPressed) && (event.key.code == sf::Keyboard::Num2)) {
+				double intensity = double_distribution(generator);
+				size_t quantity = round(intensity * (WIDTH * HEIGHT) / 100);
+				std::cout << "snare" << std::endl;
+				std::cout << intensity << std::endl;
+				std::cout << quantity << std::endl;
+
+			}
+			if ((event.type == sf::Event::KeyPressed) && (event.key.code == sf::Keyboard::Escape))
+				image.create(WIDTH, HEIGHT, sf::Color::Black);
+		}
+
+		// for (size_t i = 0; i < WIDTH * HEIGHT; i++) {
+		// 	particules[i] -= 1;
+		// 	if (particules[i] < 0)
+		// 		image.setPixel(i % WIDTH, floor(i / WIDTH), sf::Color::Black);
+		// 	i += 1;
+		// }
+
+		window.clear();
+		texture.update(image);
+		window.draw(sprite);
+		// for (size_t i = 0; i < WIDTH * HEIGHT; i++) {
+			// particules[i].draw(&window);
+		// }
+		window.display();
+	}
+
+	return EXIT_SUCCESS;
 }

@@ -86,7 +86,4 @@ main.o: main.cpp /Volumes/ADEBRAY/.brew/include/SFML/Audio.hpp \
   /Volumes/ADEBRAY/.brew/include/SFML/Graphics/Glsl.inl \
   /Volumes/ADEBRAY/.brew/include/SFML/Graphics/Sprite.hpp \
   /Volumes/ADEBRAY/.brew/include/SFML/Graphics/Text.hpp \
-  /Volumes/ADEBRAY/.brew/include/stk/SineWave.h \
-  /Volumes/ADEBRAY/.brew/include/stk/Generator.h \
-  /Volumes/ADEBRAY/.brew/include/stk/Stk.h \
-  /Volumes/ADEBRAY/.brew/include/stk/RtAudio.h
+  /Users/adebray/drumbytes/essentia/kiss_fft130/kiss_fft.h
