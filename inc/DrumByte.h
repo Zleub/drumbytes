@@ -6,7 +6,7 @@
 //  sdddddddddddddddddddddddds   @Last modified by: adebray
 //  sdddddddddddddddddddddddds
 //  :ddddddddddhyyddddddddddd:   @Created: 2017-05-15T01:08:45+02:00
-//   odddddddd/`:-`sdddddddds    @Modified: 2017-05-15T01:19:19+02:00
+//   odddddddd/`:-`sdddddddds    @Modified: 2017-05-16T03:42:04+02:00
 //    +ddddddh`+dh +dddddddo
 //     -sdddddh///sdddddds-
 //       .+ydddddddddhs/.
@@ -28,5 +28,13 @@ typedef std::valarray<Complex> CArray;
 #include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
+
+#define WIDTH (int)(2048)
+#define HEIGHT (int)(300)
+#define ZOOM (int)(1)
+
+#define BUFFSIZE 16384
+
+void fft(CArray & x);
 
 #endif

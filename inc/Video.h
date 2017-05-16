@@ -6,7 +6,7 @@
 //  sdddddddddddddddddddddddds   @Last modified by: adebray
 //  sdddddddddddddddddddddddds
 //  :ddddddddddhyyddddddddddd:   @Created: 2017-05-14T14:30:42+02:00
-//   odddddddd/`:-`sdddddddds    @Modified: 2017-05-15T01:09:44+02:00
+//   odddddddd/`:-`sdddddddds    @Modified: 2017-05-16T01:54:24+02:00
 //    +ddddddh`+dh +dddddddo
 //     -sdddddh///sdddddds-
 //       .+ydddddddddhs/.
@@ -32,6 +32,8 @@ public:
 
 class Video {
 public:
+	sf::Font font;
+
 	std::vector<sf::Color> colors = {
 		sf::Color::White,
 		sf::Color::Red,
@@ -44,13 +46,11 @@ public:
 
 	size_t quantity;
 	sf::RenderWindow window;
-	sf::Image image;
-	sf::Texture texture;
-	sf::Sprite sprite;
 	sf::Clock clock;
-	std::vector<Particule> particules;
 
 	sf::VertexArray VA;
+	std::vector<int> life;
+	std::vector<int> positions;
 
 	float lastTime = 0;
 
@@ -65,6 +65,21 @@ public:
 	double getDoubleRandom(void);
 
 	sf::Color getColorRandom(void);
+
+	enum Pieces {
+		KICK,
+		SNARE,
+		BASS_TOM,
+		HI_HAT,
+		RIDE,
+		CRASH,
+		NBR_PIECES
+	};
+
+	std::string pieces_to_string(Pieces);
+
+	std::vector<bool> pieces_bool;
+	std::vector<sf::RectangleShape> rects;
 
 private:
 	size_t width;

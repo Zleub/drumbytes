@@ -2,7 +2,7 @@
 # @Date:   2017-05-02T11:56:38+02:00
 # @Email:  adebray@student.42.fr
 # @Last modified by:   adebray
-# @Last modified time: 2017-05-15T01:07:53+02:00
+# @Last modified time: 2017-05-15T16:05:53+02:00
 
 NAME = drumbytes
 SRC = $(shell find ./src -name "*.cpp") main.cpp
