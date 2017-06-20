@@ -20,7 +20,11 @@ Recorder::Recorder(sf::Mutex & mutex, CArray & bin) : bin(bin), mutex(mutex) {
 		std::cout << s << std::endl;
 	});
 
-	setProcessingInterval(sf::Time::Zero);
+	setDevice(devices[0]);
+
+	// setProcessingInterval(sf::Time::Zero);
+
+	// std::cout << getSampleRate() << std::endl;
 }
 
 Recorder::~Recorder() {
@@ -34,9 +38,10 @@ bool Recorder::onStart() {
 
 bool Recorder::onProcessSamples(const sf::Int16* samples, std::size_t sampleCount) {
 	std::vector<Complex> sample ;
-	size_t bufferSize = sampleCount > 512 ? 512 : sampleCount;
+	size_t bufferSize = sampleCount > BUFFSIZE ? BUFFSIZE : sampleCount;
 
-	std::cout << "record: " << bufferSize << std::endl;
+	// std::cout << "sampleCount: " << sampleCount << std::endl;
+	// std::cout << "bufferSize: " << bufferSize << std::endl;
 
 	sample.resize(bufferSize) ;
 	for (size_t i = 0; i < bufferSize; i++) {

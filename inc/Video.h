@@ -6,15 +6,15 @@
 //  sdddddddddddddddddddddddds   @Last modified by: adebray
 //  sdddddddddddddddddddddddds
 //  :ddddddddddhyyddddddddddd:   @Created: 2017-05-14T14:30:42+02:00
-//   odddddddd/`:-`sdddddddds    @Modified: 2017-05-16T01:54:24+02:00
+//   odddddddd/`:-`sdddddddds    @Modified: 2017-06-14T00:27:34+02:00
 //    +ddddddh`+dh +dddddddo
 //     -sdddddh///sdddddds-
 //       .+ydddddddddhs/.
 //           .-::::-`
 
 #include <DrumByte.h>
-
-class Video;
+#include <Recorder.h>
+#include <Player.h>
 
 class Particule {
 public:
@@ -32,6 +32,21 @@ public:
 
 class Video {
 public:
+	struct Audio {
+		CArray bin;
+		sf::Mutex mutex;
+
+		Recorder *record;
+		Player *player;
+	};
+
+	CArray bin;
+	sf::Mutex mutex;
+	Recorder record;
+
+
+	std::vector<Audio *> players;
+
 	sf::Font font;
 
 	std::vector<sf::Color> colors = {
@@ -51,20 +66,16 @@ public:
 	sf::VertexArray VA;
 	std::vector<int> life;
 	std::vector<int> positions;
+	std::vector<int> shadow_positions;
 
 	float lastTime = 0;
 
-	Video(size_t, size_t) ;
-	virtual ~Video() ;
-
-	void run(sf::Mutex & mutex, CArray & bin) ;
-
-	int getWidthRandom(void);
-	int getHeightRandom(void);
-	int getLifetimeRandom(void);
-	double getDoubleRandom(void);
-
-	sf::Color getColorRandom(void);
+	struct Threshold {
+		double bin_start;
+		double bin_end;
+		double bin_low;
+		double bin_high;
+	};
 
 	enum Pieces {
 		KICK,
@@ -73,15 +84,54 @@ public:
 		HI_HAT,
 		RIDE,
 		CRASH,
+		ENSEMBLE,
 		NBR_PIECES
 	};
 
-	std::string pieces_to_string(Pieces);
+	enum Mode {
+		CALIBRATE,
+		NOTHING
+	};
+
+	Video(size_t, size_t, Mode) ;
+	virtual ~Video() ;
+
+	int getWidthRandom(void);
+	int getHeightRandom(void);
+	int getLifetimeRandom(void);
+	double getDoubleRandom(void);
+
+	sf::Color getColorRandom(void);
+
+	Pieces record_piece;
+	std::vector<nlohmann::json> memory;
 
 	std::vector<bool> pieces_bool;
 	std::vector<sf::RectangleShape> rects;
+	std::vector<sf::Image *> images;
+
+	int image_ptr;
+
+	Pieces string_to_pieces(std::string);
+	static std::string pieces_to_string(Pieces);
+	std::string mode_to_string(Mode);
+
+	void loadImages(void);
+	void loadMemory(void);
+
+	void run(void) ;
+	void draw(void) ;
+	void event(void) ;
+
+	void kick(double intensity) ;
+	void snare(double intensity) ;
+	void bass_tom(double intensity) ;
+	void hi_hat(double intensity) ;
+	void ride(double intensity) ;
+	void crash(double intensity) ;
 
 private:
+	Mode mode;
 	size_t width;
 	size_t height;
 

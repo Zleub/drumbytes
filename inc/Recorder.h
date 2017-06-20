@@ -17,8 +17,6 @@
 class Recorder : public sf::SoundRecorder
 {
 private:
-	CArray & bin;
-	sf::Mutex & mutex;
 public:
 	Recorder(sf::Mutex &, CArray &) ;
 	~Recorder() ;
@@ -26,4 +24,7 @@ public:
 	bool onStart() ;
 	bool onProcessSamples(const sf::Int16* samples, std::size_t sampleCount) ;
 	void onStop() ;
+
+	CArray & bin;
+	sf::Mutex & mutex;
 };
